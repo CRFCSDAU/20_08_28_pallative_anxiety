@@ -1,0 +1,366 @@
+---
+title: ''
+author: ''
+date: ''
+output: 
+  html_document:
+    df_print: paged
+    keep_md: true
+  word_document:
+    reference_docx: style.1.docx
+---
+
+```{r setup, include = FALSE}
+
+  knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, 
+                        fig.width  = 6 * 1.67, fig.height = 6)
+
+  load("data/data.RData")
+  source("scripts/functions.R")
+  
+  library(descr)
+  library(tidyverse)
+  library(viridis)
+  library(flextable)
+  library(likert)
+  library(patchwork)
+  library(knitr)
+
+
+```
+
+
+```{r prep_data_function}
+
+  likert_data <- function(data, q_levs, q_labs, levs, group = FALSE){
+  # Reshape data to long, tack on question labels, then go back to wide 
+    if(group == TRUE){
+      df <- select(data, id, q_levs, doctor_nurse) %>%
+        gather(question, response, -id, -doctor_nurse) %>%
+        mutate(question = factor(question, levels = q_levs, labels = q_labs), 
+               response = factor(response, levels = levs)) %>%
+        spread(question, response) %>%
+        select(-id)
+    }
+    else{
+      df <- select(data, id, q_levs) %>%
+        gather(question, response, -id) %>%
+        mutate(question = factor(question, levels = q_levs, labels = q_labs), 
+               response = factor(response, levels = levs)) %>%
+        spread(question, response) %>%
+        select(-id)
+    }
+    class(df) <- class(df)[3] # likert() can't handle the tibble
+    return(df)
+  }
+
+# Example
+# vars <- names(select(data, pain:respiratory_secretions))
+# labs <- simpleCap(vars)
+# 
+# likert_data(data, vars, labs)
+  
+```
+
+
+```{r plot_function}
+
+  likert_plot_group <- function(likert_df, ...){
+    plot(likert_df, col = viridis(5), panel.strip.color = "white", 
+         wrap = 100) +
+      guides(fill = guide_legend(title = "", nrow = 1, byrow = TRUE)) +
+      theme_minimal() +
+      ylab("") +
+      theme(panel.grid = element_blank(), 
+            legend.position = "bottom", 
+            legend.key.size = unit(0.5,"line"))
+  }
+
+
+```
+
+
+## `r variable_names[[16, 2]]`
+
+```{r}
+
+  vars <- names(select(data, pain:respiratory_secretions))
+  labs <- simpleCap(vars)
+  levs <- levels(data$pain)
+  
+  df <- likert(likert_data(data, vars, labs, levs))
+
+  likert_plot_group(df)
+
+```
+
+### By role
+
+```{r}
+
+  vars <- names(select(data, pain:respiratory_secretions))
+  labs <- simpleCap(vars)
+  levs <- levels(data$pain)
+  
+  df <- likert(likert_data(data, vars, labs, levs), group = data$doctor_nurse)
+
+  likert_plot_group(df)
+
+```
+
+## `r variable_names[[7, 2]]`
+
+```{r}
+# Example
+  vars <- names(select(data, access_to_ppe:delayed_career_progression))
+  labs <- simpleCap(vars)
+  levs <- levels(data$pain)
+  
+  df <- likert(likert_data(data, vars, labs, levs))
+
+  likert_plot_group(df)
+  
+
+```
+
+### By role
+
+```{r}
+# Example
+  vars <- names(select(data, access_to_ppe:delayed_career_progression))
+  labs <- simpleCap(vars)
+  levs <- levels(data$pain)
+  
+  df <- likert(likert_data(data, vars, labs, levs), group = data$doctor_nurse)
+
+  likert_plot_group(df)
+  
+
+```
+
+## `r variable_names[[21, 2]]`
+
+```{r}
+# Example
+  vars <- names(
+    select(
+      data,
+      enforced_visiting_restrictions:bereavement_support
+      )
+    )
+  labs <- simpleCap(vars)
+  levs <- levels(data$pain)
+  
+  df <- likert(likert_data(data, vars, labs, levs))
+
+  likert_plot_group(df)
+  
+```
+
+### By role
+
+```{r}
+# Example
+  vars <- names(
+    select(
+      data,
+      enforced_visiting_restrictions:bereavement_support
+      )
+    )
+  labs <- simpleCap(vars)
+  levs <- levels(data$pain)
+  
+  df <- likert(likert_data(data, vars, labs, levs), group = data$doctor_nurse)
+
+  likert_plot_group(df)
+  
+```
+
+## Binary reponses
+
+```{r}
+
+  labs <- variable_names[[13, 2]]
+
+  df <- select(data, response_13, doctor_nurse) %>%
+    gather(var, response, -doctor_nurse) %>%
+    mutate(var = factor(var, labels = labs), 
+           response = factor(response))
+  
+  g1 <- ggplot(df, aes(fill = response, x = 1)) +
+    geom_bar(position = "fill") +
+    scale_fill_viridis(guide = FALSE, discrete = TRUE) +
+    facet_wrap(~var, labeller = label_wrap_gen(18)) +
+    theme_minimal() +
+    theme(panel.grid = element_blank(), 
+          axis.text.x = element_blank()) +
+    xlab("") +
+    ylab("Proportion of respondants")
+
+```
+
+```{r}
+
+  labs <- variable_names[[14, 2]]
+
+  df <- select(data, response_14, doctor_nurse) %>%
+    gather(var, response, -doctor_nurse) %>%
+    mutate(var = factor(var, labels = labs), 
+           response = factor(response))
+  
+  g2 <- ggplot(df, aes(fill = response, x = 1)) +
+    geom_bar(position = "fill") +
+    scale_fill_viridis("", discrete = TRUE) +
+    facet_wrap(~var, labeller = label_wrap_gen(18)) +
+    theme_minimal() +
+    theme(panel.grid = element_blank(), 
+          axis.text.x = element_blank()) +
+    xlab("") +
+    ylab("")
+
+```
+
+```{r}
+
+  labs <- variable_names[[25, 2]]
+
+  df <- select(data, response_25, doctor_nurse) %>%
+    gather(var, response, -doctor_nurse) %>%
+    mutate(var = factor(var, labels = labs), 
+           response = factor(response))
+  
+  g3 <- ggplot(df, aes(fill = response, x = 1)) +
+    geom_bar(position = "fill") +
+    scale_fill_viridis("", discrete = TRUE) +
+    facet_wrap(~var, labeller = label_wrap_gen(18)) +
+    theme_minimal() +
+    theme(panel.grid = element_blank(), 
+          axis.text.x = element_blank()) +
+    xlab("") +
+    ylab("")
+
+```
+
+```{r}
+
+  g1 | g2 | g3
+
+
+```
+
+### By role
+
+```{r}
+
+  labs <- variable_names[[13, 2]]
+
+  df <- select(data, response_13, doctor_nurse) %>%
+    gather(var, response, -doctor_nurse) %>%
+    mutate(var = factor(var, labels = labs), 
+           response = factor(response))
+  
+  g1 <- ggplot(df, aes(fill = response, x = doctor_nurse)) +
+    geom_bar(position = "fill") +
+    scale_fill_viridis(guide = FALSE, discrete = TRUE) +
+    facet_wrap(~var, labeller = label_wrap_gen(18)) +
+    theme_minimal() +
+    theme(panel.grid = element_blank(), 
+          axis.text.x = element_blank()) +
+    xlab("") +
+    ylab("Proportion of respondants")
+
+```
+
+```{r}
+
+  labs <- variable_names[[14, 2]]
+
+  df <- select(data, response_14, doctor_nurse) %>%
+    gather(var, response, -doctor_nurse) %>%
+    mutate(var = factor(var, labels = labs), 
+           response = factor(response))
+  
+  g2 <- ggplot(df, aes(fill = response, x = doctor_nurse)) +
+    geom_bar(position = "fill") +
+    scale_fill_viridis("", discrete = TRUE) +
+    facet_wrap(~var, labeller = label_wrap_gen(18)) +
+    theme_minimal() +
+    theme(panel.grid = element_blank(), 
+          axis.text.x = element_blank()) +
+    xlab("") +
+    ylab("")
+
+```
+
+```{r}
+
+  labs <- variable_names[[25, 2]]
+
+  df <- select(data, response_25, doctor_nurse) %>%
+    gather(var, response, -doctor_nurse) %>%
+    mutate(var = factor(var, labels = labs), 
+           response = factor(response))
+  
+  g3 <- ggplot(df, aes(fill = response, x = doctor_nurse)) +
+    geom_bar(position = "fill") +
+    scale_fill_viridis("", discrete = TRUE) +
+    facet_wrap(~var, labeller = label_wrap_gen(18)) +
+    theme_minimal() +
+    theme(panel.grid = element_blank(), 
+          axis.text.x = element_blank()) +
+    xlab("") +
+    ylab("")
+
+```
+
+```{r}
+
+  g1 | g2 | g3
+
+```
+
+## Simple tests of differences in responses by role
+
+```{r}
+
+  vars <- names(select(data, access_to_ppe:response_14))
+
+  df <- data_frame(); k <- 1
+  for(i in vars){
+    df <- bind_rows(
+      df, 
+      data_frame(
+        var = i, 
+        p = chisq.test(data[[i]], data[["doctor_nurse"]])$p.value
+      )
+    )
+  }
+  
+  df <- arrange(df, p) %>%
+    mutate(
+      m = nrow(.), 
+      i = 1:nrow(.), 
+      q = 0.05, 
+      fdrp = i/m*q, 
+      bh_sig1 = p < fdrp, 
+      bon_sig = p < 0.05/m, 
+      p = signif(p, 2)
+    )
+           
+  kable(df)
+
+```
+
+
+```{r code_book}
+
+  print(summarytools::dfSummary(data), method = "render")
+
+```
+
+```{r sysinfo}
+
+  DescTools::SysInfo()
+
+```
+
